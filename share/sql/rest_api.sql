@@ -1,12 +1,14 @@
 --
 -- Database :  `rest_api`
 --
-SET FOREIGN_KEY_CHECKS = 0;
-
 CREATE DATABASE IF NOT EXISTS `rest_api` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `rest_api`;
 
+-- Drop child table first to avoid FK constraint errors
+DROP TABLE IF EXISTS `user_task`;
 DROP TABLE IF EXISTS `task`;
+DROP TABLE IF EXISTS `user`;
+
 CREATE TABLE IF NOT EXISTS `task` (
   `task_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(128) NOT NULL,
@@ -16,13 +18,6 @@ CREATE TABLE IF NOT EXISTS `task` (
   PRIMARY KEY (`task_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `user`
---
-
-DROP TABLE IF EXISTS `user`;
 CREATE TABLE IF NOT EXISTS `user` (
   `user_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(32) NOT NULL,
@@ -31,12 +26,6 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1 ;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `user_task`
---
-DROP TABLE IF EXISTS `user_task`;
 CREATE TABLE IF NOT EXISTS `user_task` (
   `user_id` int(11) unsigned NOT NULL,
   `task_id` int(11) unsigned NOT NULL,
@@ -44,7 +33,6 @@ CREATE TABLE IF NOT EXISTS `user_task` (
   CONSTRAINT `fk_ut_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_ut_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`task_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 
 INSERT INTO `rest_api`.`user` (`user_id`, `name`, `email`) VALUES ('1', 'G4', 'gectou4@gmail.com');
 
@@ -57,7 +45,4 @@ Attendre que l''eau ne goutte plus
 Prendre la tasse', '2015-11-04 03:01:08', '2'), ('2', 'Boire le café', 'Prendre la tasse de café de la Task 1
 Savourer', '2015-11-04 03:01:08', '1');
 
-
 INSERT INTO `rest_api`.`user_task` (`user_id`, `task_id`) VALUES ('1', '1'), ('1', '2');
-
-SET FOREIGN_KEY_CHECKS = 1;
