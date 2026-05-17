@@ -12,7 +12,7 @@ import (
 type compiledRoute struct {
 	Methods    []string
 	Regex      *regexp.Regexp
-	ParamNames []string
+	ParamMap   map[string]string
 	Controller string
 	Action     string
 }
@@ -25,7 +25,6 @@ func NewRouter(routes []config.Route) *Router {
 	r := &Router{}
 	for _, route := range routes {
 		methods := strings.Split(route.Method, "|")
-		paramNames := extractParamNames(route.Pattern)
 		regex := regexp.MustCompile(route.Pattern)
 
 		parts := strings.Split(route.Handler, ":")
@@ -39,22 +38,12 @@ func NewRouter(routes []config.Route) *Router {
 		r.routes = append(r.routes, compiledRoute{
 			Methods:    methods,
 			Regex:      regex,
-			ParamNames: paramNames,
+			ParamMap:   route.ParamMap,
 			Controller: controller,
 			Action:     action,
 		})
 	}
 	return r
-}
-
-func extractParamNames(pattern string) []string {
-	var names []string
-	re := regexp.MustCompile(`\([^)]+\)`)
-	matches := re.FindAllStringIndex(pattern, -1)
-	for i := range matches {
-		names = append(names, string(rune('0'+i+1)))
-	}
-	return names
 }
 
 func (r *Router) Match(method, path string) (string, string, map[string]string, bool) {
@@ -76,9 +65,10 @@ func (r *Router) Match(method, path string) (string, string, map[string]string, 
 		}
 
 		params := make(map[string]string)
-		for i, name := range route.ParamNames {
-			if i+1 < len(matches) {
-				params[name] = matches[i+1]
+		for i := 1; i < len(matches); i++ {
+			posKey := string(rune('0' + i))
+			if name, ok := route.ParamMap[posKey]; ok {
+				params[name] = matches[i]
 			}
 		}
 
