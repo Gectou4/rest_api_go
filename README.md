@@ -4,15 +4,19 @@ Lightweight REST API for managing users and tasks with their relationships, writ
 
 ## Requirements
 
-- Go 1.23+
-- MySQL 5.7+ / MariaDB 10.4+
+- Docker & Docker Compose (recommended)
+- Or Go 1.23+ and MariaDB 10.4+ / MySQL 5.7+
 
 ## Quick Start
 
 ### With Docker Compose
 
 ```bash
-docker-compose up -d
+# Start the API (MariaDB + Go server)
+docker-compose up -d api
+
+# Run the tests
+docker-compose run --rm test
 ```
 
 The API will be available at `http://localhost:8080`.
@@ -22,15 +26,15 @@ The API will be available at `http://localhost:8080`.
 1. Initialize the database:
 
 ```bash
-mysql -u root -p < share/sql/rest_api.sql
+mariadb -u root -p < share/sql/rest_api.sql
 ```
 
-2. Set environment variables (optional):
+2. Set environment variables:
 
 ```bash
 export DB_USER=root
 export DB_PWD=
-export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true"
+export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true&tls=skip-verify"
 export PORT=8080
 ```
 
@@ -79,17 +83,28 @@ curl -X POST http://localhost:8080/user/1/task/1
 ### With Docker (recommended, no Go required)
 
 ```bash
-# Start API (MySQL + server with auto-wait)
-docker-compose up -d api
-
-# Run tests in a dedicated container
+# Start MariaDB, initialize database, and run tests
 docker-compose run --rm test
 ```
 
-### All-in-one (start everything + run tests)
+This starts a dedicated test container that:
+1. Waits for MariaDB to be ready
+2. Initializes the database with seed data
+3. Runs all integration tests
+
+### With Go installed
 
 ```bash
-docker-compose up -d mysql && docker-compose run --rm test
+# Ensure MariaDB is running and initialized
+mariadb -u root -p < share/sql/rest_api.sql
+
+# Set database connection
+export DB_USER=root
+export DB_PWD=
+export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true&tls=skip-verify"
+
+# Run tests
+go test -v ./tests/
 ```
 
 ## Linting and Formatting
@@ -119,6 +134,10 @@ golangci-lint run
 # Format code
 gofmt -w .
 ```
+
+## Database
+
+The project uses **MariaDB 11** by default via Docker Compose. TLS is disabled locally (`tls=skip-verify` in DSN, `--skip-ssl` for CLI) to avoid self-signed certificate errors. For production, configure proper TLS certificates and remove these flags.
 
 ## Project Structure
 
@@ -151,8 +170,9 @@ rest_api_go/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml           # GitHub Actions CI/CD
-├── docker-compose.yml       # Docker Compose for local dev
-├── Dockerfile               # Docker image
+├── docker-compose.yml       # Docker Compose (MariaDB + API + tests)
+├── Dockerfile               # Production image
+├── Dockerfile.test          # Test image
 ├── .golangci.yml            # Linter configuration
 ├── go.mod                   # Go module definition
 └── openapi.yaml             # OpenAPI specification
