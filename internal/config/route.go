@@ -28,9 +28,9 @@ func LoadRoutes() []Route {
 			ParamMap: map[string]string{"1": "userId", "2": "taskId"},
 		},
 		{
-			Method:   "POST|PUT",
-			Pattern:  "^/task$",
-			Handler:  "Task:AddTask",
+			Method:  "POST|PUT",
+			Pattern: "^/task$",
+			Handler: "Task:AddTask",
 		},
 		{
 			Method:   "POST|PUT",

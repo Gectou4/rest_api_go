@@ -6,11 +6,11 @@ import (
 )
 
 type User struct {
-	ID    int
-	Name  string
-	Email string
-	db    *sql.DB
-	table string
+	ID     int
+	Name   string
+	Email  string
+	db     *sql.DB
+	table  string
 	loaded bool
 }
 
