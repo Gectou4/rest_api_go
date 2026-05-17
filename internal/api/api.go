@@ -33,17 +33,14 @@ func (a *API) Handler() http.Handler {
 func (a *API) handleRequest(w http.ResponseWriter, r *http.Request) {
 	setCORSHeaders(w)
 
+	controller := router.GetController(r.Context())
+	action := router.GetAction(r.Context())
 	params := router.GetParams(r.Context())
-	if params == nil {
+
+	if controller == "" || action == "" {
 		writeJSON(w, http.StatusNotFound, "Not Found")
 		return
 	}
-
-	controller := params["_controller"]
-	action := params["_action"]
-
-	delete(params, "_controller")
-	delete(params, "_action")
 
 	switch controller {
 	case "User":

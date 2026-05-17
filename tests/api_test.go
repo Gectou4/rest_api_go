@@ -144,7 +144,15 @@ func getLastTaskID(t *testing.T) int {
 		t.Fatal("No tasks found")
 	}
 	last := tasks[len(tasks)-1]
-	return int(last["task_id"].(float64))
+	switch v := last["task_id"].(type) {
+	case int:
+		return v
+	case float64:
+		return int(v)
+	default:
+		t.Fatalf("Unexpected type for task_id: %T", v)
+		return 0
+	}
 }
 
 func TestEditTask(t *testing.T) {

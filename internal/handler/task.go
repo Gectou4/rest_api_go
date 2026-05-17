@@ -20,28 +20,20 @@ func (h *TaskHandler) AddTask(w http.ResponseWriter, r *http.Request, params map
 		Status      *int   `json:"status"`
 	}
 
-	if r.Method == http.MethodPost {
-		if err := r.ParseForm(); err != nil {
+	ct := r.Header.Get("Content-Type")
+	if ct == "application/json" {
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 			writeJSON(w, http.StatusBadRequest, "Invalid request")
 			return
 		}
-		input.Title = r.FormValue("title")
-		input.Description = r.FormValue("description")
-		if s := r.FormValue("status"); s != "" {
-			var status int
-			json.Unmarshal([]byte(s), &status)
-			input.Status = &status
-		}
 	} else {
-		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			if err := r.ParseForm(); err == nil {
-				input.Title = r.FormValue("title")
-				input.Description = r.FormValue("description")
-				if s := r.FormValue("status"); s != "" {
-					var status int
-					json.Unmarshal([]byte(s), &status)
-					input.Status = &status
-				}
+		if err := r.ParseForm(); err == nil {
+			input.Title = r.FormValue("title")
+			input.Description = r.FormValue("description")
+			if s := r.FormValue("status"); s != "" {
+				var status int
+				json.Unmarshal([]byte(s), &status)
+				input.Status = &status
 			}
 		}
 	}
@@ -118,7 +110,13 @@ func (h *TaskHandler) EditTask(w http.ResponseWriter, r *http.Request, params ma
 		Status      *int    `json:"status"`
 	}
 
-	if r.Method == http.MethodPost {
+	ct := r.Header.Get("Content-Type")
+	if ct == "application/json" {
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			writeJSON(w, http.StatusBadRequest, "Invalid request")
+			return
+		}
+	} else {
 		if err := r.ParseForm(); err == nil {
 			if v := r.FormValue("title"); v != "" {
 				input.Title = &v
@@ -130,22 +128,6 @@ func (h *TaskHandler) EditTask(w http.ResponseWriter, r *http.Request, params ma
 				var s int
 				json.Unmarshal([]byte(v), &s)
 				input.Status = &s
-			}
-		}
-	} else {
-		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-			if err := r.ParseForm(); err == nil {
-				if v := r.FormValue("title"); v != "" {
-					input.Title = &v
-				}
-				if v := r.FormValue("description"); v != "" {
-					input.Description = &v
-				}
-				if v := r.FormValue("status"); v != "" {
-					var s int
-					json.Unmarshal([]byte(v), &s)
-					input.Status = &s
-				}
 			}
 		}
 	}
