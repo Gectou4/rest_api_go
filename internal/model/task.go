@@ -39,11 +39,11 @@ func (t *Task) Load(id int) {
 	t.ID = id
 	query := fmt.Sprintf("SELECT status, title, description, creation_date FROM `%s` WHERE task_id = ?", t.table)
 	var status int
-	var creationDate string
+	var creationDate time.Time
 	err := t.db.QueryRow(query, t.ID).Scan(&status, &t.Title, &t.Description, &creationDate)
 	if err == nil {
 		t.Status = ParseTaskStatus(status)
-		t.CreationDate, _ = time.ParseInLocation("2006-01-02 15:04:05", creationDate, time.Local)
+		t.CreationDate = creationDate
 		t.loaded = true
 	}
 }
@@ -85,7 +85,8 @@ func (t *Task) GetAll() ([]map[string]interface{}, error) {
 	var tasks []map[string]interface{}
 	for rows.Next() {
 		var id, status int
-		var title, description, creationDate string
+		var title, description string
+		var creationDate time.Time
 		if scanErr := rows.Scan(&id, &status, &title, &description, &creationDate); scanErr != nil {
 			continue
 		}
@@ -94,7 +95,7 @@ func (t *Task) GetAll() ([]map[string]interface{}, error) {
 			"status":        status,
 			"title":         title,
 			"description":   description,
-			"creation_date": creationDate,
+			"creation_date": creationDate.Format("2006-01-02 15:04:05"),
 		})
 	}
 	return tasks, rows.Err()
