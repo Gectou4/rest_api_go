@@ -77,11 +77,11 @@ jobs:
       fail-fast: false
 
     services:
-      mariadb:
-        image: mariadb:11
+      mysql:
+        image: mysql:8.0
         env:
-          MARIADB_ROOT_PASSWORD: root
-          MARIADB_DATABASE: rest_api
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rest_api
         ports:
           - 3306:3306
         options: >-
@@ -103,10 +103,10 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Wait for MariaDB
+      - name: Wait for MySQL
         run: |
           until mysqladmin ping -h127.0.0.1 -uroot -proot --silent; do
-            echo "Waiting for MariaDB..."
+            echo "Waiting for MySQL..."
             sleep 2
           done
 
@@ -118,7 +118,7 @@ jobs:
         env:
           DB_USER: root
           DB_PWD: root
-          DB_DSN: tcp(127.0.0.1:3306)/rest_api?parseTime=true&tls=skip-verify
+          DB_DSN: tcp(127.0.0.1:3306)/rest_api?parseTime=true
         run: go test -v ./tests/
 
   quality-gate:
