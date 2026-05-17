@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rest_api
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./share/sql/rest_api.sql:/docker-entrypoint-initdb.d/rest_api.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "--password=root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_USER: root
+      DB_PWD: root
+      DB_DSN: tcp(mysql:3306)/rest_api?parseTime=true
+      PORT: "8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["sh", "-c", "sleep 10 && /app/server"]
+
+volumes:
+  mysql_data:

@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: "Lint (golangci-lint)"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+          args: --timeout=5m
+
+  fmt:
+    runs-on: ubuntu-latest
+    name: "Format (gofmt)"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "Unformatted files found:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+  vet:
+    runs-on: ubuntu-latest
+    name: "Static Analysis (go vet)"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run go vet
+        run: go vet ./...
+
+  test:
+    needs: [lint, fmt, vet]
+    runs-on: ubuntu-latest
+    name: "Tests (Go ${{ matrix.go-version }})"
+    strategy:
+      matrix:
+        go-version: ['1.23', '1.24']
+      fail-fast: false
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rest_api
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h127.0.0.1 -uroot -proot --silent; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Initialize database
+        run: |
+          mysql -h127.0.0.1 -uroot -proot rest_api < share/sql/rest_api.sql
+
+      - name: Run tests
+        env:
+          DB_USER: root
+          DB_PWD: root
+          DB_DSN: tcp(127.0.0.1:3306)/rest_api?parseTime=true
+        run: go test -v ./tests/
+
+  quality-gate:
+    needs: [lint, fmt, vet, test]
+    runs-on: ubuntu-latest
+    name: "Quality Gate"
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Format: ${{ needs.fmt.result }}"
+          echo "Vet: ${{ needs.vet.result }}"
+          echo "Test: ${{ needs.test.result }}"
+
+          if [[ "${{ needs.lint.result }}" == "failure" || "${{ needs.fmt.result }}" == "failure" || "${{ needs.vet.result }}" == "failure" || "${{ needs.test.result }}" == "failure" ]]; then
+            echo "Quality gate FAILED"
+            exit 1
+          fi
+
+          echo "Quality gate PASSED"
+
+  auto-fix:
+    needs: [lint]
+    if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    name: "Auto-fix formatting"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Apply gofmt
+        run: gofmt -w .
+
+      - name: Run golangci-lint fix
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+          args: --fix --timeout=5m
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No formatting changes to commit"
+          else
+            git commit -m "style: auto-fix formatting with gofmt and golangci-lint"
+            git push
+          fi

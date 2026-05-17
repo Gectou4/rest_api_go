@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: G4Api - Go REST API
+  description: Lightweight REST API for managing users and tasks with their relationships
+  version: 0.1.0
+  contact:
+    name: Laurent Semat
+    email: gectou4@gmail.com
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Utilisateurs
+    description: Operations on users
+  - name: Taches
+    description: Operations on tasks
+  - name: Taches utilisateur
+    description: Operations on user-task associations
+
+paths:
+  /user/{userId}:
+    get:
+      summary: Get user by ID
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/{userId}/task:
+    get:
+      summary: Get tasks for a user
+      tags:
+        - Taches utilisateur
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User's task list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTask'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Associate a task with a user
+      tags:
+        - Taches utilisateur
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Association created
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 1
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Remove task-user association
+      tags:
+        - Taches utilisateur
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Association removed
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 1
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /task:
+    post:
+      summary: Create a new task
+      tags:
+        - Taches
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Missing title
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /task/{taskId}:
+    post:
+      summary: Update a task
+      tags:
+        - Taches
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 1
+        '400':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a task
+      tags:
+        - Taches
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 1
+        '400':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        creation_date:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+
+    TaskInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          default: ""
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+          default: 1
+
+    TaskStatus:
+      type: integer
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      x-enumNames:
+        - Backlog
+        - Todo
+        - InProgress
+        - Done
+        - Closed
+
+    UserTask:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        tasks:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Task'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
