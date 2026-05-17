@@ -76,7 +76,24 @@ curl -X POST http://localhost:8080/user/1/task/1
 
 ## Testing
 
+### With Docker (no Go required)
+
 ```bash
+# Start MySQL, initialize database, and run tests
+docker run --rm --network host -v ${PWD}:/app -w /app golang:1.23 sh -c "
+  go mod tidy &&
+  until mysqladmin ping -h127.0.0.1 -uroot -proot --silent; do sleep 2; done &&
+  mysql -h127.0.0.1 -uroot -proot rest_api < share/sql/rest_api.sql &&
+  DB_USER=root DB_PWD=root DB_DSN='tcp(127.0.0.1:3306)/rest_api?parseTime=true' go test -v ./tests/
+"
+```
+
+### With Go installed
+
+```bash
+# Ensure MySQL is running and initialized
+mysql -u root -p < share/sql/rest_api.sql
+
 # Set database connection
 export DB_USER=root
 export DB_PWD=root
@@ -87,6 +104,21 @@ go test -v ./tests/
 ```
 
 ## Linting and Formatting
+
+### With Docker (no Go required)
+
+```bash
+# Format code
+docker run --rm -v ${PWD}:/app -w /app golang:1.23 gofmt -w .
+
+# Run go vet
+docker run --rm -v ${PWD}:/app -w /app golang:1.23 go vet ./...
+
+# Run golangci-lint
+docker run --rm -v ${PWD}:/app -w /app golangci/golangci-lint:latest golangci-lint run
+```
+
+### With Go installed
 
 ```bash
 # Install golangci-lint

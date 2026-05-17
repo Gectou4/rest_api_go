@@ -15,7 +15,7 @@ func LoadDBConfig() DBConfig {
 	cfg := DBConfig{
 		User: getEnv("DB_USER", "root"),
 		Pwd:  getEnv("DB_PWD", ""),
-		DSN:  getEnv("DB_DSN", "mysql:host=localhost;dbname=rest_api;charset=utf8"),
+		DSN:  getEnv("DB_DSN", "tcp(127.0.0.1:3306)/rest_api?parseTime=true"),
 	}
 	return cfg
 }
