@@ -80,7 +80,7 @@ func (t *Task) GetAll() ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var tasks []map[string]interface{}
 	for rows.Next() {

@@ -32,7 +32,7 @@ func (h *TaskHandler) AddTask(w http.ResponseWriter, r *http.Request, params map
 			input.Description = r.FormValue("description")
 			if s := r.FormValue("status"); s != "" {
 				var status int
-				json.Unmarshal([]byte(s), &status)
+				_ = json.Unmarshal([]byte(s), &status)
 				input.Status = &status
 			}
 		}
@@ -126,7 +126,7 @@ func (h *TaskHandler) EditTask(w http.ResponseWriter, r *http.Request, params ma
 			}
 			if v := r.FormValue("status"); v != "" {
 				var s int
-				json.Unmarshal([]byte(v), &s)
+				_ = json.Unmarshal([]byte(v), &s)
 				input.Status = &s
 			}
 		}

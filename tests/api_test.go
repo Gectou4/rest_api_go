@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Failed to open database: %v\n", err)
 		os.Exit(1)
 	}
-	defer testDB.Close()
+	defer func() { _ = testDB.Close() }()
 
 	if err := testDB.Ping(); err != nil {
 		fmt.Printf("Failed to ping database: %v\n", err)

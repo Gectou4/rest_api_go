@@ -74,11 +74,7 @@ func (ut *UserTask) Save() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.Exec("DELETE FROM `user_task` WHERE user_id = ?", ut.UserID)
 	if err != nil {
@@ -89,7 +85,7 @@ func (ut *UserTask) Save() (bool, error) {
 	if prepErr != nil {
 		return false, prepErr
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for taskID := range ut.TaskList {
 		if _, execErr := stmt.Exec(ut.UserID, taskID); execErr != nil {
@@ -108,11 +104,7 @@ func (ut *UserTask) DeleteUserTask(taskID int) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.Exec("DELETE FROM `user_task` WHERE user_id = ? AND task_id = ?", ut.UserID, taskID)
 	if err != nil {
@@ -149,7 +141,7 @@ func (ut *UserTask) LoadByUserID(userID int) {
 	if err != nil {
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var taskID int

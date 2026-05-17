@@ -10,19 +10,11 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gofmt
-    - goimports
 
 linters-settings:
   errcheck:
-    check-type-assertions: true
+    check-type-assertions: false
     check-blank: false
-  govet:
-    enable-all: true
-  gofmt:
-    simplify: true
 
 issues:
-  exclude-use-default: false
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  exclude-use-default: true

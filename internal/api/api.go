@@ -95,5 +95,5 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	enc.Encode(data)
+	_ = enc.Encode(data)
 }
