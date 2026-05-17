@@ -76,31 +76,20 @@ curl -X POST http://localhost:8080/user/1/task/1
 
 ## Testing
 
-### With Docker (no Go required)
+### With Docker (recommended, no Go required)
 
 ```bash
-# Start MySQL, initialize database, and run tests
-docker run --rm --network host -v ${PWD}:/app -w /app golang:1.23 sh -c "
-  go mod tidy &&
-  until mysqladmin ping -h127.0.0.1 -uroot -proot --silent; do sleep 2; done &&
-  mysql -h127.0.0.1 -uroot -proot rest_api < share/sql/rest_api.sql &&
-  DB_USER=root DB_PWD=root DB_DSN='tcp(127.0.0.1:3306)/rest_api?parseTime=true' go test -v ./tests/
-"
+# Start API (MySQL + server with auto-wait)
+docker-compose up -d api
+
+# Run tests in a dedicated container
+docker-compose run --rm test
 ```
 
-### With Go installed
+### All-in-one (start everything + run tests)
 
 ```bash
-# Ensure MySQL is running and initialized
-mysql -u root -p < share/sql/rest_api.sql
-
-# Set database connection
-export DB_USER=root
-export DB_PWD=root
-export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true"
-
-# Run tests
-go test -v ./tests/
+docker-compose up -d mysql && docker-compose run --rm test
 ```
 
 ## Linting and Formatting

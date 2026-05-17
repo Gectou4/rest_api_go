@@ -1,4 +1,4 @@
-.PHONY: build run test lint fmt clean docker-up docker-down
+.PHONY: build run test lint fmt clean docker-up docker-down docker-test
 
 build:
 	go build -o server ./cmd/server
@@ -20,7 +20,10 @@ clean:
 	rm -f server
 
 docker-up:
-	docker-compose up -d
+	docker-compose up -d api
 
 docker-down:
 	docker-compose down
+
+docker-test:
+	docker-compose run --rm test
