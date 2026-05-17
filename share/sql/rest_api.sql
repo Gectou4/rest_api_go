@@ -1,6 +1,8 @@
 --
 -- Database :  `rest_api`
 --
+SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE DATABASE IF NOT EXISTS `rest_api` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `rest_api`;
 
@@ -57,3 +59,5 @@ Savourer', '2015-11-04 03:01:08', '1');
 
 
 INSERT INTO `rest_api`.`user_task` (`user_id`, `task_id`) VALUES ('1', '1'), ('1', '2');
+
+SET FOREIGN_KEY_CHECKS = 1;
