@@ -100,6 +100,10 @@ func (r *Router) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
+		if method != req.Method {
+			req.Method = method
+		}
+
 		ctx := context.WithValue(req.Context(), paramsKey, params)
 		ctx = context.WithValue(ctx, controllerKey, controller)
 		ctx = context.WithValue(ctx, actionKey, action)

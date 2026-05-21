@@ -118,7 +118,9 @@ jobs:
         env:
           DB_USER: root
           DB_PWD: root
-          DB_DSN: tcp(127.0.0.1:3306)/rest_api?parseTime=true
+          DB_HOST: 127.0.0.1
+          DB_PORT: "3306"
+          DB_NAME: rest_api
         run: go test -v ./tests/
 
   quality-gate:

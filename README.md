@@ -34,7 +34,9 @@ mariadb -u root -p < share/sql/rest_api.sql
 ```bash
 export DB_USER=root
 export DB_PWD=
-export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true&tls=skip-verify"
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+export DB_NAME=rest_api
 export PORT=8080
 ```
 
@@ -101,7 +103,9 @@ mariadb -u root -p < share/sql/rest_api.sql
 # Set database connection
 export DB_USER=root
 export DB_PWD=
-export DB_DSN="tcp(127.0.0.1:3306)/rest_api?parseTime=true&tls=skip-verify"
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+export DB_NAME=rest_api
 
 # Run tests
 go test -v ./tests/
